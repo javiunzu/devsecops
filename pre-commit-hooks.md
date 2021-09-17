@@ -139,9 +139,11 @@ DevOps cycle.
 After all, everybody works on a feature-branch and in the worst case the
 offending branch can be deleted.
 
-##References
+## References
 
 [Git documentation](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks)
+
 [Pylint documentation](https://pylint.pycqa.org/en/latest/)
+
 [Talisman](https://thoughtworks.github.io/talisman/)
 
