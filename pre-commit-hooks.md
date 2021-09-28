@@ -112,6 +112,36 @@ To run several tools at once, there are a couple of options:
 * Use a hook manager like **pre-commit** tool or **Husky**. Certainly overkill
   for simple scenarios, but sooner than later they pay off.
 
+#### Example using Husky
+Install husky:
+
+```bash
+npm install husky --save-dev
+```
+
+Within your repository, enable hooks:
+
+```bash
+npx husky install
+npm set-script prepare "husky install"
+```
+
+Add commands to a hook:
+
+```bash
+npx husky add .husky/pre-commit 'pylint $(git ls-files \'*.py\')'
+```
+
+or directly edit the script `.husky/pre-commit`. Mine looks currently like this:
+
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+pylint $(git ls-files "*.py")
+$TALISMAN_HOME/talisman_hook_script pre-commit
+```
+
 ## Part 2: set up the server
 
 Awesome! Now all our team-mates use pre-commit hooks and we all comply to the same
@@ -124,9 +154,11 @@ unchecked code in the repository there is nothing we can do. Or can we?
 
 One approach is using a pre-receive hook on the server to run the same tools a
 developer is supposed to run. While this will effectively avoid polluting the
-repository's history, this might be too strict, and a false positive of a poorly
-configured tool can block the whole team. These hooks are intended for enforcing
-policies and usually developers do not have control over the server settings.
+repository's history, it doesn't scale well: different projects have different
+needs, and even within a project the required tests and versions of the tools
+change over time. Server hooks are intended for enforcing policies for all the
+users of a repository and usually developers do not have control over the server
+settings.
 
 Another option is running the tools independently as part of the CI to validate
 the code. Although this will let potentially dangerous commits in, the team can
@@ -146,4 +178,6 @@ offending branch can be deleted.
 [Pylint documentation](https://pylint.pycqa.org/en/latest/)
 
 [Talisman](https://thoughtworks.github.io/talisman/)
+
+[Husky](https://typicode.github.io/husky/#/)
 
