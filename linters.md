@@ -107,3 +107,117 @@ can install it on your CI/CD tool and include it as part of the release process.
 
 Congratulations! You have successfuly created one of many quality gates for your
 project.
+
+### A (probably) better example
+
+Let's return to the example of pylint for a Django project. If we scan our
+project with the default set of rules,  we are going to see a lot of messages
+and the overall rating of the code is going to be poor:
+
+```
+$ pylint $(git ls-files '*.py')
+************* Module manage
+web/manage.py:11:8: C0415: Import outside toplevel (django.core.management.execute_from_command_line) (import-outside-toplevel)
+************* Module ratings.apps
+web/ratings/apps.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/apps.py:4:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module ratings.privacy
+web/ratings/privacy.py:10:0: C0304: Final newline missing (missing-final-newline)
+web/ratings/privacy.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/privacy.py:4:0: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module ratings.views
+web/ratings/views.py:22:0: C0301: Line too long (108/100) (line-too-long)
+web/ratings/views.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/views.py:8:0: C0116: Missing function or method docstring (missing-function-docstring)
+web/ratings/views.py:9:17: E1101: Class 'Candidate' has no 'objects' member (no-member)
+web/ratings/views.py:10:17: E1101: Class 'Category' has no 'objects' member (no-member)
+web/ratings/views.py:16:20: E1101: Class 'Vote' has no 'objects' member (no-member)
+web/ratings/views.py:20:17: E1101: Class 'Category' has no 'objects' member (no-member)
+web/ratings/views.py:25:0: C0116: Missing function or method docstring (missing-function-docstring)
+web/ratings/views.py:26:12: E1101: Class 'Candidate' has no 'objects' member (no-member)
+web/ratings/views.py:27:17: E1101: Class 'Category' has no 'objects' member (no-member)
+web/ratings/views.py:31:0: C0116: Missing function or method docstring (missing-function-docstring)
+web/ratings/views.py:45:24: W0621: Redefining name 'vote' from outer scope (line 25) (redefined-outer-name)
+web/ratings/views.py:35:20: E1101: Class 'Candidate' has no 'objects' member (no-member)
+web/ratings/views.py:39:31: E1101: Class 'Category' has no 'objects' member (no-member)
+web/ratings/views.py:40:28: E1101: Class 'Vote' has no 'objects' member (no-member)
+web/ratings/views.py:4:0: C0411: third party import "from django.db.models import Avg, Sum" should be placed before "from .models import Candidate, Category, Vote" (wrong-import-order)
+web/ratings/views.py:5:0: C0411: third party import "from django.conf import settings" should be placed before "from .models import Candidate, Category, Vote" (wrong-import-order)
+************* Module ratings.migrations.0001_initial
+web/ratings/migrations/0001_initial.py:19:0: C0301: Line too long (114/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:27:0: C0301: Line too long (114/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:35:0: C0301: Line too long (114/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:36:0: C0301: Line too long (165/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:37:0: C0301: Line too long (151/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:39:0: C0301: Line too long (118/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:40:0: C0301: Line too long (116/100) (line-too-long)
+web/ratings/migrations/0001_initial.py:1:0: C0103: Module name "0001_initial" doesn't conform to snake_case naming style (invalid-name)
+web/ratings/migrations/0001_initial.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/migrations/0001_initial.py:8:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module ratings.admin
+web/ratings/admin.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/admin.py:5:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module ratings.urls
+web/ratings/urls.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module ratings.tests
+web/ratings/tests.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/tests.py:1:0: W0611: Unused TestCase imported from django.test (unused-import)
+************* Module ratings.models
+web/ratings/models.py:16:0: C0301: Line too long (131/100) (line-too-long)
+web/ratings/models.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+web/ratings/models.py:5:0: C0115: Missing class docstring (missing-class-docstring)
+web/ratings/models.py:10:0: C0115: Missing class docstring (missing-class-docstring)
+web/ratings/models.py:15:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module web.settings
+web/web/settings.py:25:8: R1719: The if expression can be replaced with 'bool(test)' (simplifiable-if-expression)
+************* Module web.urls
+web/web/urls.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+
+-----------------------------------
+Your code has been rated at 3.57/10
+```
+
+As you can see, a lot of these messages have to do with peculiarities of Django
+itself.
+
+First of all we can
+have pylint generate a configuration file on the project's root folder:
+
+```bash
+pylint --generate-rcfile > $PROJECT/.pylintrc
+```
+
+There are some files that are generated by Django, and as such it is not our
+concern if they follow style guides. You can skip some of them like so:
+
+```
+[MASTER]
+...
+ignore=manage.py, settings.py
+ignore-paths=.*/migrations/.*
+```
+
+For dynamically generated attributes - like the objects of a query - you can add
+this:
+
+```
+[TYPECHECK]
+...
+generated-members=objects
+```
+
+The line length in later versions is 100, but we can increase it to 120. A value
+that has been adopted as a default from various specialized IDEs, like PyCharm.
+
+```
+[FORMAT]
+...
+max-line-length=120
+```
+
+The more we refine the rules to suit our needs, the more meaningful the issues
+are. By editing the pylint configuration files we weeded out what otherwise
+would have been annoying false positives.
+Now we have a reasonable number of issues to address. Configuring a linter for
+the first time certainly takes some time (this example took me a couple of
+hours), but once it is done, the whole team can profit from it.
